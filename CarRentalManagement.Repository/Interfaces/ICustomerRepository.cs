@@ -9,8 +9,13 @@ namespace CarRentalManagement.Repository.Interfaces
     {
         Task<IEnumerable<Customer>> GetAllCustomersAsync();
         Task<Customer> GetCustomerByIdAsync(int id);
-        Task AddCustomerAsync(Customer customer);
         Task UpdateCustomerAsync(Customer customer);
         Task DeleteCustomerAsync(int id);
+
+        Task AddCustomerAsync(Customer customer, string password);
+
+
+        Task<(bool isValid, string role)> CheckCredentialsAsync(string email, string password);
+
     }
 }

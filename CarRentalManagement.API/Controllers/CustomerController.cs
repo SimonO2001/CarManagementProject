@@ -4,6 +4,7 @@ using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CarRentalManagement.API.Dtos;
 
 namespace CarRentalManagement.API.Controllers
 {
@@ -41,11 +42,24 @@ namespace CarRentalManagement.API.Controllers
 
         // POST: api/Customer
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        public async Task<ActionResult<Customer>> PostCustomer([FromBody] CustomerCreateDto customerDto)
         {
-            await _customerRepository.AddCustomerAsync(customer);
-            return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
+            var customer = new Customer
+            {
+                FirstName = customerDto.FirstName,
+                LastName = customerDto.LastName,
+                LicenseNumber = customerDto.LicenseNumber,
+                Phone = customerDto.Phone,
+                Email = customerDto.Email,
+                HashedPassword = BCrypt.Net.BCrypt.HashPassword(customerDto.Password), // This is fine
+                Role = customerDto.Role
+            };
+
+            await _customerRepository.AddCustomerAsync(customer, customerDto.Password); // Ensure this is correct
+            return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
         }
+
+
 
         // PUT: api/Customer/5
         [HttpPut("{id}")]
