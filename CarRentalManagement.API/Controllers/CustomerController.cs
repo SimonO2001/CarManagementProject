@@ -21,14 +21,27 @@ namespace CarRentalManagement.API.Controllers
 
         // GET: api/Customer
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+        public async Task<ActionResult<IEnumerable<GetCustomerDto>>> GetCustomers()
         {
-            return Ok(await _customerRepository.GetAllCustomersAsync());
+            // Map the list of customers to list of GetCustomerDto
+            var customers = await _customerRepository.GetAllCustomersAsync();
+            var customerDtos = customers.Select(customer => new GetCustomerDto
+            {
+                Id = customer.Id,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                LicenseNumber = customer.LicenseNumber,
+                Phone = customer.Phone,
+                Email = customer.Email,
+                Role = customer.Role
+            });
+
+            return Ok(customerDtos);
         }
 
         // GET: api/Customer/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        public async Task<ActionResult<GetCustomerDto>> GetCustomer(int id)
         {
             var customer = await _customerRepository.GetCustomerByIdAsync(id);
 
@@ -37,7 +50,19 @@ namespace CarRentalManagement.API.Controllers
                 return NotFound();
             }
 
-            return customer;
+            // Map the customer to GetCustomerDto
+            var customerDto = new GetCustomerDto
+            {
+                Id = customer.Id,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                LicenseNumber = customer.LicenseNumber,
+                Phone = customer.Phone,
+                Email = customer.Email,
+                Role = customer.Role
+            };
+
+            return customerDto;
         }
 
         // POST: api/Customer
