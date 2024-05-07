@@ -11,7 +11,7 @@ using System.Text;
 public class AuthenticationController : ControllerBase
 {
     private readonly ICustomerRepository _customerRepository;
-    private readonly IConfiguration _configuration; // Inject IConfiguration to access settings
+    private readonly IConfiguration _configuration;
 
     public AuthenticationController(ICustomerRepository customerRepository, IConfiguration configuration)
     {
@@ -20,7 +20,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult> Login([FromBody] LoginDto loginDto)
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         var (isValid, role) = await _customerRepository.CheckCredentialsAsync(loginDto.Email, loginDto.Password);
         if (isValid)
@@ -31,19 +31,18 @@ public class AuthenticationController : ControllerBase
         return Unauthorized();
     }
 
-
     private string GenerateJwtToken(string email, string role)
     {
-        var keyByteArray = Convert.FromBase64String(_configuration["Jwt:Key"]); // Ensure this is directly from config without alterations
-        var securityKey = new SymmetricSecurityKey(keyByteArray);
+        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+        var securityKey = new SymmetricSecurityKey(key);
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
         {
-        new Claim(JwtRegisteredClaimNames.Sub, email),
-        new Claim(JwtRegisteredClaimNames.Email, email),
-        new Claim(ClaimTypes.Role, role),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, role),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         var token = new JwtSecurityToken(
@@ -56,11 +55,8 @@ public class AuthenticationController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-
-
-
 }
+
 
 public class LoginDto
 {

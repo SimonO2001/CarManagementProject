@@ -28,53 +28,44 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-        // Add services to the container.
-        builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-        builder.Services.AddControllers();
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
-        builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-        builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-        builder.Services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
-        builder.Services.AddScoped<IRentalContractRepository, RentalContractRepository>();
-        builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-        builder.Services.AddScoped<IInsuranceRepository, InsuranceRepository>();
-        builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-        // Add other scoped services...
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IServiceRecordRepository, ServiceRecordRepository>();
+builder.Services.AddScoped<IRentalContractRepository, RentalContractRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IInsuranceRepository, InsuranceRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+// Add other scoped services...
 
-       builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("coffee",
-                                  policy =>
-                                  {
-                                      policy.AllowAnyOrigin() // this is really bad outside TEC
-                                            .AllowAnyHeader()
-                                            .AllowAnyMethod();
-                                  });
-        });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+var app = builder.Build(); // Make sure this line is before using 'app'
 
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+app.UseCors("AllowAll");
+app.UseHttpsRedirection();
+app.UseAuthentication(); // Ensure Authentication middleware is properly used
+app.UseAuthorization();
+app.MapControllers();
 
-        var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-        app.UseCors("coffee");
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-
-
-        app.MapControllers();
-
-        app.Run();
-  
+app.Run();
