@@ -1,9 +1,11 @@
-﻿// Controllers/VehicleController.cs
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
+using System;
 
 namespace CarRentalManagement.API.Controllers
 {
@@ -12,10 +14,26 @@ namespace CarRentalManagement.API.Controllers
     public class VehicleController : ControllerBase
     {
         private readonly IVehicleRepository _vehicleRepository;
+        private readonly string _imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
         public VehicleController(IVehicleRepository vehicleRepository)
         {
             _vehicleRepository = vehicleRepository;
+            EnsureFolderExists(_imagePath);
+        }
+
+        private void EnsureFolderExists(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+
+        private string GenerateUniqueFileName(string originalFileName)
+        {
+            string extension = Path.GetExtension(originalFileName);
+            return $"{Guid.NewGuid()}{extension}";
         }
 
         // GET: api/Vehicle
@@ -40,25 +58,69 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // POST: api/Vehicle
-        [HttpPost]
-        public async Task<ActionResult<Vehicle>> PostVehicle(Vehicle vehicle)
+        [HttpPost, DisableRequestSizeLimit]
+        public async Task<ActionResult<Vehicle>> PostVehicle([FromForm] Vehicle vehicle, IFormFile file)
         {
-            await _vehicleRepository.AddVehicleAsync(vehicle);
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is required.");
+            }
 
-            return CreatedAtAction(nameof(GetVehicle), new { id = vehicle.Id }, vehicle);
+            try
+            {
+                string uniqueFileName = GenerateUniqueFileName(file.FileName);
+                var imagePath = Path.Combine(_imagePath, uniqueFileName);
+                using (var stream = new FileStream(imagePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Ensure the URL is correct
+                vehicle.ImageUrl = $"{Request.Scheme}://{Request.Host.Value}/images/{uniqueFileName}";
+
+                Console.WriteLine($"File path: {imagePath}");
+                Console.WriteLine($"URL: {vehicle.ImageUrl}");
+
+                await _vehicleRepository.AddVehicleAsync(vehicle);
+                return CreatedAtAction(nameof(GetVehicle), new { id = vehicle.Id }, vehicle);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/Vehicle/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutVehicle(int id, Vehicle vehicle)
+        [HttpPut("{id}"), DisableRequestSizeLimit]
+        public async Task<IActionResult> PutVehicle(int id, [FromForm] Vehicle vehicle, IFormFile file)
         {
             if (id != vehicle.Id)
             {
                 return BadRequest();
             }
 
-            await _vehicleRepository.UpdateVehicleAsync(vehicle);
+            if (file != null)
+            {
+                try
+                {
+                    string uniqueFileName = GenerateUniqueFileName(file.FileName);
+                    var imagePath = Path.Combine(_imagePath, uniqueFileName);
+                    using (var stream = new FileStream(imagePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    vehicle.ImageUrl = Path.Combine("images", uniqueFileName);
 
+                    Console.WriteLine($"File path: {imagePath}");
+                    Console.WriteLine($"URL: {vehicle.ImageUrl}");
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Internal server error: {ex.Message}");
+                }
+            }
+
+            await _vehicleRepository.UpdateVehicleAsync(vehicle);
             return NoContent();
         }
 
@@ -67,7 +129,6 @@ namespace CarRentalManagement.API.Controllers
         public async Task<IActionResult> DeleteVehicle(int id)
         {
             await _vehicleRepository.DeleteVehicleAsync(id);
-
             return NoContent();
         }
     }

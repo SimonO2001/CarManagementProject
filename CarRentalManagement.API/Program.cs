@@ -64,6 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // Ensure this is placed before app.UseRouting()
 app.UseAuthentication(); // Ensure Authentication middleware is properly used
 app.UseAuthorization();
 app.MapControllers();
