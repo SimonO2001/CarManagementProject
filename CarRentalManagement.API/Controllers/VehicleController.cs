@@ -91,12 +91,18 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // PUT: api/Vehicle/5
-        [HttpPut("{id}"), DisableRequestSizeLimit]
+        [HttpPut("{id}")]
         public async Task<IActionResult> PutVehicle(int id, [FromForm] Vehicle vehicle, IFormFile file)
         {
             if (id != vehicle.Id)
             {
-                return BadRequest();
+                return BadRequest("Mismatched Vehicle ID.");
+            }
+
+            var existingVehicle = await _vehicleRepository.GetVehicleByIdAsync(id);
+            if (existingVehicle == null)
+            {
+                return NotFound($"Vehicle with ID {id} not found.");
             }
 
             if (file != null)
@@ -109,10 +115,7 @@ namespace CarRentalManagement.API.Controllers
                     {
                         await file.CopyToAsync(stream);
                     }
-                    vehicle.ImageUrl = Path.Combine("images", uniqueFileName);
-
-                    Console.WriteLine($"File path: {imagePath}");
-                    Console.WriteLine($"URL: {vehicle.ImageUrl}");
+                    existingVehicle.ImageUrl = $"{Request.Scheme}://{Request.Host.Value}/images/{uniqueFileName}";
                 }
                 catch (Exception ex)
                 {
@@ -120,8 +123,20 @@ namespace CarRentalManagement.API.Controllers
                 }
             }
 
-            await _vehicleRepository.UpdateVehicleAsync(vehicle);
-            return NoContent();
+            // Update fields
+            existingVehicle.Type = vehicle.Type;
+            existingVehicle.Make = vehicle.Make;
+            existingVehicle.Model = vehicle.Model;
+            existingVehicle.Year = vehicle.Year;
+            existingVehicle.VIN = vehicle.VIN;
+            existingVehicle.Status = vehicle.Status;
+            existingVehicle.CurrentMileage = vehicle.CurrentMileage;
+            existingVehicle.RentalRate = vehicle.RentalRate;
+            existingVehicle.HorsePower = vehicle.HorsePower;
+            existingVehicle.Torque = vehicle.Torque;
+
+            await _vehicleRepository.UpdateVehicleAsync(existingVehicle);
+            return NoContent(); // Return 204 No Content to indicate successful update without a response body
         }
 
         // DELETE: api/Vehicle/5

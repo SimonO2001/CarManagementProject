@@ -13,5 +13,7 @@ namespace CarRentalManagement.Repository.Models
         public int CurrentMileage { get; set; }
         public decimal RentalRate { get; set; }
         public string? ImageUrl { get; set; }
+        public int HorsePower { get; set; }
+        public int Torque { get; set; }
     }
 }
