@@ -1,5 +1,4 @@
-﻿// Controllers/InsuranceController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using System.Collections.Generic;
@@ -18,14 +17,12 @@ namespace CarRentalManagement.API.Controllers
             _insuranceRepository = insuranceRepository;
         }
 
-        // GET: api/Insurance
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Insurance>>> GetInsurances()
         {
             return Ok(await _insuranceRepository.GetAllInsurancesAsync());
         }
 
-        // GET: api/Insurance/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Insurance>> GetInsurance(int id)
         {
@@ -39,15 +36,13 @@ namespace CarRentalManagement.API.Controllers
             return insurance;
         }
 
-        // POST: api/Insurance
         [HttpPost]
         public async Task<ActionResult<Insurance>> PostInsurance(Insurance insurance)
         {
             await _insuranceRepository.AddInsuranceAsync(insurance);
-            return CreatedAtAction("GetInsurance", new { id = insurance.Id }, insurance);
+            return CreatedAtAction(nameof(GetInsurance), new { id = insurance.Id }, insurance);
         }
 
-        // PUT: api/Insurance/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutInsurance(int id, Insurance insurance)
         {
@@ -60,7 +55,6 @@ namespace CarRentalManagement.API.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Insurance/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInsurance(int id)
         {

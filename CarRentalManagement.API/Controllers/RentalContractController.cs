@@ -1,9 +1,10 @@
-﻿// Controllers/RentalContractController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
+using CarRentalManagement.API.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace CarRentalManagement.API.Controllers
 {
@@ -12,20 +13,28 @@ namespace CarRentalManagement.API.Controllers
     public class RentalContractController : ControllerBase
     {
         private readonly IRentalContractRepository _rentalContractRepository;
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IVehicleRepository _vehicleRepository;
+        private readonly IInsuranceRepository _insuranceRepository;
 
-        public RentalContractController(IRentalContractRepository rentalContractRepository)
+        public RentalContractController(
+            IRentalContractRepository rentalContractRepository,
+            ICustomerRepository customerRepository,
+            IVehicleRepository vehicleRepository,
+            IInsuranceRepository insuranceRepository)
         {
             _rentalContractRepository = rentalContractRepository;
+            _customerRepository = customerRepository;
+            _vehicleRepository = vehicleRepository;
+            _insuranceRepository = insuranceRepository;
         }
 
-        // GET: api/RentalContract
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RentalContract>>> GetRentalContracts()
         {
             return Ok(await _rentalContractRepository.GetAllRentalContractsAsync());
         }
 
-        // GET: api/RentalContract/5
         [HttpGet("{id}")]
         public async Task<ActionResult<RentalContract>> GetRentalContract(int id)
         {
@@ -39,28 +48,67 @@ namespace CarRentalManagement.API.Controllers
             return rentalContract;
         }
 
-        // POST: api/RentalContract
         [HttpPost]
-        public async Task<ActionResult<RentalContract>> PostRentalContract(RentalContract rentalContract)
+        public async Task<ActionResult<RentalContract>> PostRentalContract([FromBody] RentalContractDto rentalContractDto)
         {
+            var customer = await _customerRepository.GetCustomerByIdAsync(rentalContractDto.CustomerId);
+            var vehicle = await _vehicleRepository.GetVehicleByIdAsync(rentalContractDto.VehicleId);
+            var insurance = await _insuranceRepository.GetInsuranceByIdAsync(rentalContractDto.InsuranceId);
+
+            if (customer == null || vehicle == null || insurance == null)
+            {
+                return BadRequest("Invalid customer, vehicle, or insurance.");
+            }
+
+            var rentalContract = new RentalContract
+            {
+                VehicleId = rentalContractDto.VehicleId,
+                CustomerId = rentalContractDto.CustomerId,
+                InsuranceId = rentalContractDto.InsuranceId,
+                StartDate = rentalContractDto.StartDate,
+                EndDate = rentalContractDto.EndDate,
+                TotalCost = rentalContractDto.TotalCost,
+                Vehicle = vehicle,
+                Customer = customer,
+                Insurance = insurance
+            };
+
             await _rentalContractRepository.AddRentalContractAsync(rentalContract);
-            return CreatedAtAction("GetRentalContract", new { id = rentalContract.Id }, rentalContract);
+            return CreatedAtAction(nameof(GetRentalContract), new { id = rentalContract.Id }, rentalContract);
         }
 
-        // PUT: api/RentalContract/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRentalContract(int id, RentalContract rentalContract)
+        public async Task<IActionResult> PutRentalContract(int id, [FromBody] RentalContractDto rentalContractDto)
         {
-            if (id != rentalContract.Id)
+            var rentalContract = await _rentalContractRepository.GetRentalContractByIdAsync(id);
+            if (rentalContract == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            var customer = await _customerRepository.GetCustomerByIdAsync(rentalContractDto.CustomerId);
+            var vehicle = await _vehicleRepository.GetVehicleByIdAsync(rentalContractDto.VehicleId);
+            var insurance = await _insuranceRepository.GetInsuranceByIdAsync(rentalContractDto.InsuranceId);
+
+            if (customer == null || vehicle == null || insurance == null)
+            {
+                return BadRequest("Invalid customer, vehicle, or insurance.");
+            }
+
+            rentalContract.VehicleId = rentalContractDto.VehicleId;
+            rentalContract.CustomerId = rentalContractDto.CustomerId;
+            rentalContract.InsuranceId = rentalContractDto.InsuranceId;
+            rentalContract.StartDate = rentalContractDto.StartDate;
+            rentalContract.EndDate = rentalContractDto.EndDate;
+            rentalContract.TotalCost = rentalContractDto.TotalCost;
+            rentalContract.Vehicle = vehicle;
+            rentalContract.Customer = customer;
+            rentalContract.Insurance = insurance;
 
             await _rentalContractRepository.UpdateRentalContractAsync(rentalContract);
             return NoContent();
         }
 
-        // DELETE: api/RentalContract/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRentalContract(int id)
         {

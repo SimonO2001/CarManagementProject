@@ -19,12 +19,12 @@ namespace CarRentalManagement.Repository.Repositories
 
         public async Task<IEnumerable<RentalContract>> GetAllRentalContractsAsync()
         {
-            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer).ToListAsync();
+            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer).Include(r => r.Insurance).ToListAsync();
         }
 
         public async Task<RentalContract> GetRentalContractByIdAsync(int id)
         {
-            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer)
+            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer).Include(r => r.Insurance)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 

@@ -22,16 +22,16 @@ public class AuthenticationController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
-        var (isValid, role) = await _customerRepository.CheckCredentialsAsync(loginDto.Email, loginDto.Password);
+        var (isValid, role, userId) = await _customerRepository.CheckCredentialsAsync(loginDto.Email, loginDto.Password);
         if (isValid)
         {
-            var token = GenerateJwtToken(loginDto.Email, role);
+            var token = GenerateJwtToken(loginDto.Email, role, userId);
             return Ok(new { Token = token });
         }
         return Unauthorized();
     }
 
-    private string GenerateJwtToken(string email, string role)
+    private string GenerateJwtToken(string email, string role, int userId)
     {
         var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
         var securityKey = new SymmetricSecurityKey(key);
@@ -42,6 +42,7 @@ public class AuthenticationController : ControllerBase
             new Claim(JwtRegisteredClaimNames.Sub, email),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.Role, role),
+            new Claim("userId", userId.ToString()), // Add userId to claims
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -56,7 +57,6 @@ public class AuthenticationController : ControllerBase
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
-
 
 public class LoginDto
 {

@@ -1,4 +1,4 @@
-﻿// IRepository/IRentalContractRepository.cs
+﻿// Interfaces/IRentalContractRepository.cs
 using CarRentalManagement.Repository.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

@@ -15,5 +15,8 @@ namespace CarRentalManagement.Repository.Models
         public string? ImageUrl { get; set; }
         public int HorsePower { get; set; }
         public int Torque { get; set; }
+
+        // Add this navigation property
+        public ICollection<Insurance> Insurances { get; set; } = new List<Insurance>();
     }
 }

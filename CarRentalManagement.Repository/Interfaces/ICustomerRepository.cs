@@ -15,7 +15,7 @@ namespace CarRentalManagement.Repository.Interfaces
         Task AddCustomerAsync(Customer customer, string password);
 
 
-        Task<(bool isValid, string role)> CheckCredentialsAsync(string email, string password);
+        Task<(bool isValid, string role, int userId)> CheckCredentialsAsync(string email, string password);
 
     }
 }

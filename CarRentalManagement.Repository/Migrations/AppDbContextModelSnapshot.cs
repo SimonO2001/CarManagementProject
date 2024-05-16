@@ -71,15 +71,24 @@ namespace CarRentalManagement.Repository.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("PolicyNumber")
+                    b.Property<decimal>("CostADay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Coverage")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PolicyNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Provider")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("VehicleId")
+                    b.Property<int?>("VehicleId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -127,6 +136,9 @@ namespace CarRentalManagement.Repository.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("InsuranceId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -139,6 +151,8 @@ namespace CarRentalManagement.Repository.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("InsuranceId");
 
                     b.HasIndex("VehicleId");
 
@@ -227,10 +241,9 @@ namespace CarRentalManagement.Repository.Migrations
             modelBuilder.Entity("CarRentalManagement.Repository.Models.Insurance", b =>
                 {
                     b.HasOne("CarRentalManagement.Repository.Models.Vehicle", "Vehicle")
-                        .WithMany()
+                        .WithMany("Insurances")
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Vehicle");
                 });
@@ -251,16 +264,24 @@ namespace CarRentalManagement.Repository.Migrations
                     b.HasOne("CarRentalManagement.Repository.Models.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CarRentalManagement.Repository.Models.Insurance", "Insurance")
+                        .WithMany()
+                        .HasForeignKey("InsuranceId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CarRentalManagement.Repository.Models.Vehicle", "Vehicle")
                         .WithMany()
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Customer");
+
+                    b.Navigation("Insurance");
 
                     b.Navigation("Vehicle");
                 });
@@ -274,6 +295,11 @@ namespace CarRentalManagement.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("CarRentalManagement.Repository.Models.Vehicle", b =>
+                {
+                    b.Navigation("Insurances");
                 });
 #pragma warning restore 612, 618
         }

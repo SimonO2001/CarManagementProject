@@ -1,4 +1,4 @@
-﻿// IRepository/IInsuranceRepository.cs
+﻿// Interfaces/IInsuranceRepository.cs
 using CarRentalManagement.Repository.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

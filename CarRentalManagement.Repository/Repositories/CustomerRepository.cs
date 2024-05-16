@@ -1,5 +1,4 @@
-﻿// Repositories/CustomerRepository.cs
-using CarRentalManagement.Repository.Data;
+﻿using CarRentalManagement.Repository.Data;
 using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using Microsoft.EntityFrameworkCore;
@@ -25,18 +24,15 @@ namespace CarRentalManagement.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-
-        public async Task<(bool isValid, string role)> CheckCredentialsAsync(string email, string password)
+        public async Task<(bool isValid, string role, int userId)> CheckCredentialsAsync(string email, string password)
         {
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
             if (customer != null && BCrypt.Net.BCrypt.Verify(password, customer.HashedPassword))
             {
-                return (true, customer.Role); // Assuming 'Role' is a property of 'Customer'
+                return (true, customer.Role, customer.Id); // Assuming 'Role' is a property of 'Customer'
             }
-            return (false, null);
+            return (false, null, 0);
         }
-
-
 
         public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
         {

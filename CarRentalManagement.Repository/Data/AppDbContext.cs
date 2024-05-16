@@ -17,6 +17,9 @@ namespace CarRentalManagement.Repository.Data
         public DbSet<ServiceRecord> ServiceRecords { get; set; }
         public DbSet<Insurance> Insurances { get; set; }
 
-        // Additional DbSet properties...
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        }
     }
 }
