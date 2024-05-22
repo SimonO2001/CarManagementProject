@@ -16,12 +16,14 @@ namespace CarRentalManagement.API.Controllers
         private readonly IVehicleRepository _vehicleRepository;
         private readonly string _imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
+        // Constructor to inject the repository dependency and ensure the image directory exists
         public VehicleController(IVehicleRepository vehicleRepository)
         {
             _vehicleRepository = vehicleRepository;
             EnsureFolderExists(_imagePath);
         }
 
+        // Ensure the folder exists or create it
         private void EnsureFolderExists(string path)
         {
             if (!Directory.Exists(path))
@@ -30,6 +32,7 @@ namespace CarRentalManagement.API.Controllers
             }
         }
 
+        // Generate a unique file name for the uploaded image
         private string GenerateUniqueFileName(string originalFileName)
         {
             string extension = Path.GetExtension(originalFileName);
@@ -37,6 +40,7 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // GET: api/Vehicle
+        // Retrieves all vehicles
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Vehicle>>> GetVehicles()
         {
@@ -44,6 +48,7 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // GET: api/Vehicle/5
+        // Retrieves a specific vehicle by ID
         [HttpGet("{id}")]
         public async Task<ActionResult<Vehicle>> GetVehicle(int id)
         {
@@ -58,6 +63,7 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // POST: api/Vehicle
+        // Creates a new vehicle entry and uploads the associated image
         [HttpPost, DisableRequestSizeLimit]
         public async Task<ActionResult<Vehicle>> PostVehicle([FromForm] Vehicle vehicle, IFormFile file)
         {
@@ -68,6 +74,7 @@ namespace CarRentalManagement.API.Controllers
 
             try
             {
+                // Save the uploaded file with a unique name
                 string uniqueFileName = GenerateUniqueFileName(file.FileName);
                 var imagePath = Path.Combine(_imagePath, uniqueFileName);
                 using (var stream = new FileStream(imagePath, FileMode.Create))
@@ -75,12 +82,13 @@ namespace CarRentalManagement.API.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                // Ensure the URL is correct
+                // Set the image URL for the vehicle
                 vehicle.ImageUrl = $"{Request.Scheme}://{Request.Host.Value}/images/{uniqueFileName}";
 
                 Console.WriteLine($"File path: {imagePath}");
                 Console.WriteLine($"URL: {vehicle.ImageUrl}");
 
+                // Add the vehicle to the repository
                 await _vehicleRepository.AddVehicleAsync(vehicle);
                 return CreatedAtAction(nameof(GetVehicle), new { id = vehicle.Id }, vehicle);
             }
@@ -91,6 +99,7 @@ namespace CarRentalManagement.API.Controllers
         }
 
         // PUT: api/Vehicle/5
+        // Updates an existing vehicle entry and optionally updates the associated image
         [HttpPut("{id}")]
         public async Task<IActionResult> PutVehicle(int id, [FromForm] Vehicle vehicle, IFormFile file)
         {
@@ -109,6 +118,7 @@ namespace CarRentalManagement.API.Controllers
             {
                 try
                 {
+                    // Save the new uploaded file with a unique name
                     string uniqueFileName = GenerateUniqueFileName(file.FileName);
                     var imagePath = Path.Combine(_imagePath, uniqueFileName);
                     using (var stream = new FileStream(imagePath, FileMode.Create))
@@ -123,7 +133,7 @@ namespace CarRentalManagement.API.Controllers
                 }
             }
 
-            // Update fields
+            // Update vehicle fields
             existingVehicle.Type = vehicle.Type;
             existingVehicle.Make = vehicle.Make;
             existingVehicle.Model = vehicle.Model;
@@ -135,11 +145,13 @@ namespace CarRentalManagement.API.Controllers
             existingVehicle.HorsePower = vehicle.HorsePower;
             existingVehicle.Torque = vehicle.Torque;
 
+            // Update the vehicle in the repository
             await _vehicleRepository.UpdateVehicleAsync(existingVehicle);
             return NoContent(); // Return 204 No Content to indicate successful update without a response body
         }
 
         // DELETE: api/Vehicle/5
+        // Deletes a specific vehicle by ID
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {

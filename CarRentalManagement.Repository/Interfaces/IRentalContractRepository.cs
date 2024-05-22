@@ -12,5 +12,6 @@ namespace CarRentalManagement.Repository.Interfaces
         Task AddRentalContractAsync(RentalContract rentalContract);
         Task UpdateRentalContractAsync(RentalContract rentalContract);
         Task DeleteRentalContractAsync(int id);
+        Task<IEnumerable<RentalContract>> GetRentalContractsByCustomerIdAsync(int customerId); // Ensure it uses int
     }
 }

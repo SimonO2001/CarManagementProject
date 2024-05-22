@@ -120,5 +120,23 @@ namespace CarRentalManagement.API.Controllers
             await _customerRepository.DeleteCustomerAsync(id);
             return NoContent();
         }
+        [HttpPost("register")]
+        public async Task<ActionResult<Customer>> Register([FromBody] CustomerCreateDto customerDto)
+        {
+            var customer = new Customer
+            {
+                FirstName = customerDto.FirstName,
+                LastName = customerDto.LastName,
+                LicenseNumber = customerDto.LicenseNumber,
+                Phone = customerDto.Phone,
+                Email = customerDto.Email,
+                HashedPassword = BCrypt.Net.BCrypt.HashPassword(customerDto.Password),
+                Role = customerDto.Role ?? "Default"
+            };
+
+            await _customerRepository.AddCustomerAsync(customer, customerDto.Password);
+            return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
+        }
+
     }
 }

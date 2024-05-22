@@ -1,9 +1,9 @@
-﻿// Repositories/ServiceRecordRepository.cs
-using CarRentalManagement.Repository.Data;
+﻿using CarRentalManagement.Repository.Data;
 using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CarRentalManagement.Repository.Repositories
@@ -47,6 +47,11 @@ namespace CarRentalManagement.Repository.Repositories
                 _context.ServiceRecords.Remove(serviceRecord);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<IEnumerable<ServiceRecord>> GetServiceRecordsByVehicleIdAsync(int vehicleId)
+        {
+            return await _context.ServiceRecords.Where(sr => sr.VehicleId == vehicleId).ToListAsync();
         }
     }
 }

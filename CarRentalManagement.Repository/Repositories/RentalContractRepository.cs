@@ -4,6 +4,7 @@ using CarRentalManagement.Repository.Interfaces;
 using CarRentalManagement.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CarRentalManagement.Repository.Repositories
@@ -19,12 +20,19 @@ namespace CarRentalManagement.Repository.Repositories
 
         public async Task<IEnumerable<RentalContract>> GetAllRentalContractsAsync()
         {
-            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer).Include(r => r.Insurance).ToListAsync();
+            return await _context.RentalContracts
+                .Include(r => r.Vehicle)
+                .Include(r => r.Customer)
+                .Include(r => r.Insurance)
+                .ToListAsync();
         }
 
         public async Task<RentalContract> GetRentalContractByIdAsync(int id)
         {
-            return await _context.RentalContracts.Include(r => r.Vehicle).Include(r => r.Customer).Include(r => r.Insurance)
+            return await _context.RentalContracts
+                .Include(r => r.Vehicle)
+                .Include(r => r.Customer)
+                .Include(r => r.Insurance)
                 .FirstOrDefaultAsync(r => r.Id == id);
         }
 
@@ -48,6 +56,16 @@ namespace CarRentalManagement.Repository.Repositories
                 _context.RentalContracts.Remove(rentalContract);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<IEnumerable<RentalContract>> GetRentalContractsByCustomerIdAsync(int customerId) // Ensure it uses int
+        {
+            return await _context.RentalContracts
+                .Include(r => r.Vehicle)
+                .Include(r => r.Customer)
+                .Include(r => r.Insurance)
+                .Where(r => r.CustomerId == customerId)
+                .ToListAsync();
         }
     }
 }
